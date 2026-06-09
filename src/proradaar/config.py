@@ -23,9 +23,13 @@ def load_sources(path: Path) -> list[Source]:
 
 
 def _source_from_dict(item: dict[str, Any], index: int) -> Source:
-    for field_name in ("name", "url", "group"):
-        if not item.get(field_name):
-            raise ValueError(f"Source #{index + 1} is missing {field_name}")
+    name = _required_string(item, "name", index)
+    url = _required_string(item, "url", index)
+    group = _required_string(item, "group", index)
+
+    priority = item.get("priority", 0)
+    if isinstance(priority, bool) or not isinstance(priority, int):
+        raise ValueError(f"Source #{index + 1} priority must be an integer")
 
     tags = item.get("tags", [])
     if tags is None:
@@ -34,9 +38,18 @@ def _source_from_dict(item: dict[str, Any], index: int) -> Source:
         raise ValueError(f"Source #{index + 1} tags must be a list of strings")
 
     return Source(
-        name=str(item["name"]),
-        url=str(item["url"]),
-        group=str(item["group"]),
-        priority=int(item.get("priority", 0)),
+        name=name,
+        url=url,
+        group=group,
+        priority=priority,
         tags=tags,
     )
+
+
+def _required_string(item: dict[str, Any], field_name: str, index: int) -> str:
+    value = item.get(field_name)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(
+            f"Source #{index + 1} {field_name} must be a non-empty string"
+        )
+    return value.strip()

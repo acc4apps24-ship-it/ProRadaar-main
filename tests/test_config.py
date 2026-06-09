@@ -48,3 +48,66 @@ sources:
         assert "url" in str(exc)
     else:
         raise AssertionError("Expected ValueError for missing url")
+
+
+def test_load_sources_rejects_invalid_required_field_type(tmp_path: Path):
+    config_path = tmp_path / "sources.yaml"
+    config_path.write_text(
+        """
+sources:
+  - name: 123
+    url: https://example.com/feed
+    group: influencers
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        load_sources(config_path)
+    except ValueError as exc:
+        assert "name" in str(exc)
+        assert "non-empty string" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for invalid name")
+
+
+def test_load_sources_rejects_bool_priority(tmp_path: Path):
+    config_path = tmp_path / "sources.yaml"
+    config_path.write_text(
+        """
+sources:
+  - name: Broken Source
+    url: https://example.com/feed
+    group: influencers
+    priority: true
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        load_sources(config_path)
+    except ValueError as exc:
+        assert "priority must be an integer" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for bool priority")
+
+
+def test_load_sources_rejects_string_priority(tmp_path: Path):
+    config_path = tmp_path / "sources.yaml"
+    config_path.write_text(
+        """
+sources:
+  - name: Broken Source
+    url: https://example.com/feed
+    group: influencers
+    priority: "10"
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        load_sources(config_path)
+    except ValueError as exc:
+        assert "priority must be an integer" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for string priority")
