@@ -8,34 +8,28 @@ def split_telegram_message(message: str, limit: int = TELEGRAM_LIMIT) -> list[st
     if limit < 1:
         raise ValueError("limit must be positive")
     if message == "":
-        return [""]
+        return []
 
     chunks: list[str] = []
     current = ""
-    has_current = False
 
-    for line in message.split("\n"):
-        if len(line) > limit:
-            if has_current:
+    for line in message.splitlines(keepends=True):
+        remaining = line
+        while remaining:
+            available = limit - len(current)
+            if len(remaining) <= available:
+                current += remaining
+                break
+
+            if current:
                 chunks.append(current)
                 current = ""
-                has_current = False
-            chunks.extend(line[index : index + limit] for index in range(0, len(line), limit))
-            continue
+                continue
 
-        if not has_current:
-            current = line
-            has_current = True
-            continue
+            chunks.append(remaining[:limit])
+            remaining = remaining[limit:]
 
-        candidate = f"{current}\n{line}"
-        if len(candidate) <= limit:
-            current = candidate
-        else:
-            chunks.append(current)
-            current = line
-
-    if has_current:
+    if current:
         chunks.append(current)
 
     return chunks
@@ -46,6 +40,8 @@ def send_telegram_message(token: str, chat_id: str, message: str) -> None:
 
     with httpx.Client(timeout=15.0) as client:
         for chunk in split_telegram_message(message):
+            if not chunk:
+                continue
             response = client.post(
                 url,
                 json={
