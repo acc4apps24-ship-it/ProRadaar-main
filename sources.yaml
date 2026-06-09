@@ -1,0 +1,54 @@
+sources:
+  - name: Lenny's Newsletter
+    url: https://www.lennysnewsletter.com/feed
+    group: influencers
+    priority: 10
+    tags: [product, growth, activation]
+
+  - name: Elena Verna
+    url: https://elenaverna.substack.com/feed
+    group: influencers
+    priority: 10
+    tags: [growth, monetisation, product]
+
+  - name: Notion Releases
+    url: https://www.notion.com/releases/rss.xml
+    group: company_changelogs
+    priority: 8
+    tags: [collaboration, onboarding]
+
+  - name: Asana Updates
+    url: https://forum.asana.com/c/announcements/product-updates/70.rss
+    group: company_changelogs
+    priority: 7
+    tags: [collaboration, workflow]
+
+  - name: Atlassian Blog
+    url: https://www.atlassian.com/blog/feed
+    group: company_changelogs
+    priority: 6
+    tags: [enterprise, collaboration]
+
+  - name: Miro Blog
+    url: https://miro.com/blog/rss/
+    group: company_changelogs
+    priority: 6
+    tags: [collaboration, activation]
+
+  - name: HubSpot Product Updates
+    url: https://www.hubspot.com/product-updates/rss.xml
+    group: company_changelogs
+    priority: 7
+    tags: [crm, monetisation]
+
+  - name: RB.RU
+    url: https://rb.ru/feeds/all/
+    group: industry_ru
+    priority: 5
+    tags: [russia, startups]
+
+  - name: Product Hunt
+    url: https://www.producthunt.com/feed
+    group: industry_us
+    priority: 4
+    tags: [launches, products]
