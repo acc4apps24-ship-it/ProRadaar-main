@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from openai import OpenAI
 
 from proradaar.models import ScoredEntry
@@ -11,6 +13,7 @@ MAX_FAILURES = 10
 MAX_TITLE_CHARS = 240
 MAX_URL_CHARS = 500
 MAX_SUMMARY_CHARS = 700
+MAX_FAILURE_CHARS = 500
 REQUIRED_SECTIONS = (
     "Influencers",
     "Company Updates",
@@ -48,18 +51,10 @@ def build_prompt(items: list[ScoredEntry], failures: list[str]) -> str:
 
     if items:
         for item in items[:MAX_PROMPT_ITEMS]:
-            entry = item.entry
-            source = entry.source
             lines.extend(
                 [
                     "BEGIN_ITEM",
-                    f"Source: {source.name}",
-                    f"Group: {source.group}",
-                    f"Title: {_truncate(entry.title, MAX_TITLE_CHARS)}",
-                    f"URL: {_truncate(entry.url, MAX_URL_CHARS)}",
-                    f"Topics: {', '.join(item.matched_topics)}",
-                    f"Score: {item.score}",
-                    f"Summary: {_truncate(entry.summary, MAX_SUMMARY_CHARS)}",
+                    json.dumps(_item_payload(item), ensure_ascii=False),
                     "END_ITEM",
                 ]
             )
@@ -71,7 +66,10 @@ def build_prompt(items: list[ScoredEntry], failures: list[str]) -> str:
             [
                 "",
                 "Source failures to mention briefly:",
-                *[f"- {failure}" for failure in failures[:MAX_FAILURES]],
+                *[
+                    f"- {_truncate(failure, MAX_FAILURE_CHARS)}"
+                    for failure in failures[:MAX_FAILURES]
+                ],
             ]
         )
 
@@ -108,3 +106,17 @@ def _truncate(value: str, limit: int) -> str:
     if len(value) <= limit:
         return value
     return f"{value[: limit - 3]}..."
+
+
+def _item_payload(item: ScoredEntry) -> dict[str, object]:
+    entry = item.entry
+    source = entry.source
+    return {
+        "source": source.name,
+        "group": source.group,
+        "title": _truncate(entry.title, MAX_TITLE_CHARS),
+        "url": _truncate(entry.url, MAX_URL_CHARS),
+        "topics": item.matched_topics,
+        "score": item.score,
+        "summary": _truncate(entry.summary, MAX_SUMMARY_CHARS),
+    }
