@@ -29,6 +29,22 @@ def test_deduplicate_entries_prefers_first_url():
     assert result[0].summary == "First"
 
 
+def test_deduplicate_entries_normalizes_tracking_urls():
+    entries = [
+        entry(
+            "Product update",
+            "https://example.com/post?utm_source=rss#comments",
+            "First",
+        ),
+        entry("Product update", "https://example.com/post", "Duplicate"),
+    ]
+
+    result = deduplicate_entries(entries)
+
+    assert len(result) == 1
+    assert result[0].summary == "First"
+
+
 def test_filter_recent_keeps_items_inside_window():
     entries = [
         entry("Recent activation update", "https://example.com/recent", "Recent", hours_old=2),
@@ -64,3 +80,18 @@ def test_score_entries_prioritizes_pm_keywords_and_source_priority():
     assert result[0].score > result[1].score
     assert "activation" in result[0].matched_topics
     assert "onboarding" in result[0].matched_topics
+
+
+def test_score_entries_does_not_match_keywords_inside_unrelated_words():
+    entries = [
+        entry(
+            "Important planning planet",
+            "https://example.com/planning",
+            "Important planning planet",
+        ),
+    ]
+
+    result = score_entries(entries, limit=10)
+
+    assert result[0].score == 0
+    assert result[0].matched_topics == []
