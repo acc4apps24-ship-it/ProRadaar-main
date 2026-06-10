@@ -64,12 +64,15 @@ def main(argv: list[str] | None = None) -> None:
         print(prompt)
         return
 
-    token = os.environ["TELEGRAM_BOT_TOKEN"]
-    chat_id = os.environ["TELEGRAM_CHAT_ID"]
-
     if not entries and failures:
+        token = _require_env("TELEGRAM_BOT_TOKEN")
+        chat_id = _require_env("TELEGRAM_CHAT_ID")
         send_telegram_message(token, chat_id, _all_sources_failed_message(failures))
         return
+
+    _require_env("OPENAI_API_KEY")
+    token = _require_env("TELEGRAM_BOT_TOKEN")
+    chat_id = _require_env("TELEGRAM_CHAT_ID")
 
     try:
         digest = summarize_with_llm(prompt, args.model)
@@ -103,6 +106,13 @@ def _failure_note(failures: list[str], limit: int = 240) -> str:
     if len(note) <= limit:
         return note
     return f"{note[: limit - 3]}..."
+
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise RuntimeError(f"{name} is required for non-dry-run digest runs")
+    return value
 
 
 if __name__ == "__main__":

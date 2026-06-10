@@ -60,6 +60,7 @@ def test_main_dry_run_prints_prompt_without_llm_or_telegram_env(monkeypatch, cap
 def test_main_reads_telegram_env_before_summarizing(monkeypatch):
     source = _source()
     entry = _entry(source)
+    monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     monkeypatch.setattr(digest, "load_sources", lambda path: [source])
@@ -72,7 +73,34 @@ def test_main_reads_telegram_env_before_summarizing(monkeypatch):
         ),
     )
 
-    with pytest.raises(KeyError):
+    with pytest.raises(RuntimeError, match="TELEGRAM_BOT_TOKEN"):
+        digest.main([])
+
+
+def test_main_rejects_blank_required_env_before_summarizing_or_sending(monkeypatch):
+    source = _source()
+    entry = _entry(source)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "")
+    monkeypatch.setattr(digest, "load_sources", lambda path: [source])
+    monkeypatch.setattr(digest, "fetch_all", lambda sources: ([entry], []))
+    monkeypatch.setattr(
+        digest,
+        "summarize_with_llm",
+        lambda prompt, model: pytest.fail(
+            "blank secrets must fail before LLM call"
+        ),
+    )
+    monkeypatch.setattr(
+        digest,
+        "send_telegram_message",
+        lambda token, chat_id, message: pytest.fail(
+            "blank secrets must fail before Telegram send"
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
         digest.main([])
 
 
@@ -115,6 +143,7 @@ def test_main_llm_failure_sends_failure_note_and_reraises(monkeypatch):
     source = _source()
     entry = _entry(source)
     sent = []
+    monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "token")
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat")
     monkeypatch.setattr(digest, "load_sources", lambda path: [source])
@@ -148,6 +177,7 @@ def test_main_successful_non_dry_run_summarizes_and_sends_digest(monkeypatch):
     entry = _entry(source)
     llm_calls = []
     sent = []
+    monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "token")
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat")
     monkeypatch.setattr(digest, "load_sources", lambda path: [source])
