@@ -3,7 +3,11 @@ import json
 import httpx
 import pytest
 
-from proradaar.telegram import send_telegram_message, split_telegram_message
+from proradaar.telegram import (
+    format_telegram_digest_html,
+    send_telegram_message,
+    split_telegram_message,
+)
 
 
 def test_split_telegram_message_keeps_short_message_intact():
@@ -57,6 +61,42 @@ def test_split_telegram_message_preserves_content_and_limit_invariants():
     assert "".join(chunks) == message
 
 
+def test_format_telegram_digest_html_bolds_known_headings_and_removes_markers():
+    message = "## Company Updates:\n### PM Lens"
+
+    assert format_telegram_digest_html(message) == (
+        "<b>Company Updates</b>\n"
+        "<b>PM Lens</b>"
+    )
+
+
+def test_format_telegram_digest_html_bolds_any_markdown_heading_marker():
+    message = "## Market Signals & Strategy"
+
+    assert format_telegram_digest_html(message) == (
+        "<b>Market Signals &amp; Strategy</b>"
+    )
+
+
+def test_format_telegram_digest_html_escapes_special_characters():
+    message = 'Company Updates\n- **Acme:** 5 < 7 & "quoted"'
+
+    assert format_telegram_digest_html(message) == (
+        "<b>Company Updates</b>\n"
+        "• <b>Acme:</b> 5 &lt; 7 &amp; &quot;quoted&quot;"
+    )
+
+
+def test_format_telegram_digest_html_normalizes_bullets_and_quotes():
+    message = "- One thing\n* Another thing\n> Source failures: A < B"
+
+    assert format_telegram_digest_html(message) == (
+        "• One thing\n"
+        "• Another thing\n"
+        "<blockquote>Source failures: A &lt; B</blockquote>"
+    )
+
+
 def test_send_telegram_message_posts_each_chunk_in_order(monkeypatch):
     requests = []
     real_client = httpx.Client
@@ -79,6 +119,7 @@ def test_send_telegram_message_posts_each_chunk_in_order(monkeypatch):
             {
                 "chat_id": "chat",
                 "text": "a" * 3900,
+                "parse_mode": "HTML",
                 "disable_web_page_preview": True,
             },
         ),
@@ -87,9 +128,38 @@ def test_send_telegram_message_posts_each_chunk_in_order(monkeypatch):
             {
                 "chat_id": "chat",
                 "text": "a",
+                "parse_mode": "HTML",
                 "disable_web_page_preview": True,
             },
         ),
+    ]
+
+
+def test_send_telegram_message_formats_each_chunk_as_html(monkeypatch):
+    requests = []
+    real_client = httpx.Client
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, request=request)
+
+    def client_factory(*, timeout):
+        return real_client(transport=httpx.MockTransport(handler), timeout=timeout)
+
+    monkeypatch.setattr("proradaar.telegram.httpx.Client", client_factory)
+
+    send_telegram_message("token", "chat", "Company Updates\n- **Acme:** 5 < 7")
+
+    assert requests == [
+        {
+            "chat_id": "chat",
+            "text": (
+                "<b>Company Updates</b>\n"
+                "• <b>Acme:</b> 5 &lt; 7"
+            ),
+            "parse_mode": "HTML",
+            "disable_web_page_preview": True,
+        }
     ]
 
 
