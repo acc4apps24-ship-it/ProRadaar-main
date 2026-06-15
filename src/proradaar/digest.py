@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--recent-hours", type=int, default=36)
     parser.add_argument(
         "--model",
-        default=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),
+        default=_default_model(),
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
@@ -70,7 +70,7 @@ def main(argv: list[str] | None = None) -> None:
         send_telegram_message(token, chat_id, _all_sources_failed_message(failures))
         return
 
-    _require_env("OPENAI_API_KEY")
+    _require_llm_credentials()
     token = _require_env("TELEGRAM_BOT_TOKEN")
     chat_id = _require_env("TELEGRAM_CHAT_ID")
 
@@ -106,6 +106,27 @@ def _failure_note(failures: list[str], limit: int = 240) -> str:
     if len(note) <= limit:
         return note
     return f"{note[: limit - 3]}..."
+
+
+def _default_model() -> str:
+    if _llm_provider() == "vibecode":
+        return os.environ.get("VIBECODE_MODEL", "bitrix/bitrixgpt-5.5")
+    return os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+
+
+def _require_llm_credentials() -> None:
+    provider = _llm_provider()
+    if provider == "openai":
+        _require_env("OPENAI_API_KEY")
+        return
+    if provider == "vibecode":
+        _require_env("VIBECODE_API_KEY")
+        return
+    raise RuntimeError(f"Unsupported LLM_PROVIDER: {provider}")
+
+
+def _llm_provider() -> str:
+    return os.environ.get("LLM_PROVIDER", "openai").strip().lower() or "openai"
 
 
 def _require_env(name: str) -> str:

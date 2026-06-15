@@ -202,6 +202,38 @@ def test_main_successful_non_dry_run_summarizes_and_sends_digest(monkeypatch):
     assert sent == [("token", "chat", "Digest content")]
 
 
+def test_main_uses_vibecode_model_without_openai_key(monkeypatch):
+    source = _source()
+    entry = _entry(source)
+    llm_calls = []
+    sent = []
+    monkeypatch.setenv("LLM_PROVIDER", "vibecode")
+    monkeypatch.setenv("VIBECODE_API_KEY", "vibe-key")
+    monkeypatch.setenv("VIBECODE_MODEL", "bitrix/bitrixgpt-5.5")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat")
+    monkeypatch.setattr(digest, "load_sources", lambda path: [source])
+    monkeypatch.setattr(digest, "fetch_all", lambda sources: ([entry], []))
+
+    def summarize(prompt: str, model: str) -> str:
+        llm_calls.append((prompt, model))
+        return "Digest content"
+
+    monkeypatch.setattr(digest, "summarize_with_llm", summarize)
+    monkeypatch.setattr(
+        digest,
+        "send_telegram_message",
+        lambda token, chat_id, message: sent.append((token, chat_id, message)),
+    )
+
+    digest.main(["--max-items", "10"])
+
+    assert len(llm_calls) == 1
+    assert llm_calls[0][1] == "bitrix/bitrixgpt-5.5"
+    assert sent == [("token", "chat", "Digest content")]
+
+
 def _source() -> Source:
     return Source(
         name="Example",

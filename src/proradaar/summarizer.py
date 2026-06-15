@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 from openai import OpenAI
 
@@ -14,6 +15,7 @@ MAX_TITLE_CHARS = 240
 MAX_URL_CHARS = 500
 MAX_SUMMARY_CHARS = 700
 MAX_FAILURE_CHARS = 500
+VIBECODE_BASE_URL = "https://vibecode.bitrix24.tech/v1"
 REQUIRED_SECTIONS = (
     "Influencers",
     "Company Updates",
@@ -79,7 +81,7 @@ def build_prompt(items: list[ScoredEntry], failures: list[str]) -> str:
 def summarize_with_llm(
     prompt: str, model: str, max_completion_tokens: int = 1200
 ) -> str:
-    client = OpenAI()
+    client = _build_client(_llm_provider())
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -100,6 +102,28 @@ def summarize_with_llm(
         raise ValueError("OpenAI response contained empty content.")
 
     return content
+
+
+def _llm_provider() -> str:
+    return os.environ.get("LLM_PROVIDER", "openai").strip().lower() or "openai"
+
+
+def _build_client(provider: str) -> OpenAI:
+    if provider == "openai":
+        return OpenAI()
+    if provider == "vibecode":
+        return OpenAI(
+            api_key=_require_env("VIBECODE_API_KEY"),
+            base_url=VIBECODE_BASE_URL,
+        )
+    raise RuntimeError(f"Unsupported LLM_PROVIDER: {provider}")
+
+
+def _require_env(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise RuntimeError(f"{name} is required for {_llm_provider()} summaries")
+    return value
 
 
 def _truncate(value: str, limit: int) -> str:

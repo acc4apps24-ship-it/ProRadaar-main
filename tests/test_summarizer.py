@@ -131,7 +131,8 @@ def test_summarize_with_llm_returns_content_and_sets_token_cap(monkeypatch):
     calls = []
 
     class FakeOpenAI:
-        def __init__(self):
+        def __init__(self, **kwargs):
+            calls.append({"client": kwargs})
             self.chat = SimpleNamespace(
                 completions=SimpleNamespace(create=self._create)
             )
@@ -151,9 +152,61 @@ def test_summarize_with_llm_returns_content_and_sets_token_cap(monkeypatch):
     result = summarize_with_llm("Prompt", model="test-model", max_completion_tokens=321)
 
     assert result == "Digest content"
-    assert calls[0]["model"] == "test-model"
-    assert calls[0]["max_completion_tokens"] == 321
-    assert calls[0]["temperature"] == 0.2
+    assert calls[0] == {"client": {}}
+    assert calls[1]["model"] == "test-model"
+    assert calls[1]["max_completion_tokens"] == 321
+    assert calls[1]["temperature"] == 0.2
+
+
+def test_summarize_with_llm_uses_vibecode_openai_compatible_client(monkeypatch):
+    calls = []
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            calls.append({"client": kwargs})
+            self.chat = SimpleNamespace(
+                completions=SimpleNamespace(create=self._create)
+            )
+
+        def _create(self, **kwargs):
+            calls.append({"completion": kwargs})
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(content="VibeCode digest")
+                    )
+                ]
+            )
+
+    monkeypatch.setenv("LLM_PROVIDER", "vibecode")
+    monkeypatch.setenv("VIBECODE_API_KEY", "vibe-key")
+    monkeypatch.setattr(summarizer, "OpenAI", FakeOpenAI)
+
+    result = summarize_with_llm("Prompt", model="bitrix/bitrixgpt-5.5")
+
+    assert result == "VibeCode digest"
+    assert calls[0] == {
+        "client": {
+            "api_key": "vibe-key",
+            "base_url": "https://vibecode.bitrix24.tech/v1",
+        }
+    }
+    assert calls[1]["completion"]["model"] == "bitrix/bitrixgpt-5.5"
+
+
+def test_summarize_with_llm_requires_vibecode_api_key(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "vibecode")
+    monkeypatch.delenv("VIBECODE_API_KEY", raising=False)
+
+    with pytest.raises(RuntimeError, match="VIBECODE_API_KEY"):
+        summarize_with_llm("Prompt", model="bitrix/bitrixgpt-5.5")
+
+
+def test_summarize_with_llm_rejects_unknown_provider(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "mystery")
+
+    with pytest.raises(RuntimeError, match="Unsupported LLM_PROVIDER: mystery"):
+        summarize_with_llm("Prompt", model="test-model")
 
 
 def test_summarize_with_llm_raises_for_empty_choices(monkeypatch):
