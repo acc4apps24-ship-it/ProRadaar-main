@@ -6,7 +6,7 @@ sources:
     tags: [product, growth, activation]
 
   - name: Elena Verna
-    url: https://elenaverna.substack.com/feed
+    url: https://www.elenaverna.com/feed
     group: influencers
     priority: 10
     tags: [growth, monetisation, product]
@@ -15,7 +15,13 @@ sources:
     url: https://www.notion.com/releases/rss.xml
     group: company_changelogs
     priority: 8
-    tags: [collaboration, onboarding]
+    tags: [collaboration, workflow, ai, activation]
+
+  - name: monday.com API Changelog
+    url: https://developer.monday.com/api-reference/changelog.rss
+    group: company_changelogs
+    priority: 8
+    tags: [workflow, automation, platform, api]
 
   - name: Asana Updates
     url: https://forum.asana.com/c/announcements/product-updates/70.rss
@@ -24,28 +30,136 @@ sources:
     tags: [collaboration, workflow]
 
   - name: Atlassian Blog
-    url: https://www.atlassian.com/blog/feed
+    url: https://www.atlassian.com/blog/rss
     group: company_changelogs
     priority: 6
-    tags: [enterprise, collaboration]
+    tags: [enterprise, collaboration, workflow]
 
-  - name: Miro Blog
-    url: https://miro.com/blog/rss/
+  - name: Slack Developer Changelog
+    url: https://docs.slack.dev/changelog/rss.xml
+    group: company_changelogs
+    priority: 8
+    tags: [collaboration, automation, platform]
+
+  - name: Figma Release Notes
+    url: https://www.figma.com/release-notes/feed/atom.xml
+    group: company_changelogs
+    priority: 8
+    tags: [collaboration, design, workflow, ai]
+
+  - name: Miro Changelog
+    url: https://miro.com/changelog/feed/
     group: company_changelogs
     priority: 6
     tags: [collaboration, activation]
 
-  - name: HubSpot Product Updates
-    url: https://www.hubspot.com/product-updates/rss.xml
+  - name: Linear Changelog
+    url: https://linear.app/rss/changelog.xml
+    group: company_changelogs
+    priority: 8
+    tags: [workflow, product, collaboration]
+
+  - name: Airtable Blog
+    url: https://blog.airtable.com/rss/
+    group: company_changelogs
+    priority: 6
+    tags: [workflow, automation, collaboration]
+
+  - name: Zapier Blog
+    url: https://zapier.com/blog/feeds/latest/
+    group: company_changelogs
+    priority: 6
+    tags: [automation, integrations, workflow]
+
+  - name: ClickUp Changelog
+    url: https://feedback.clickup.com/api/changelog/feed.rss
     group: company_changelogs
     priority: 7
-    tags: [crm, monetisation]
+    tags: [productivity, workflow, collaboration]
+
+  - name: Dropbox Blog
+    url: https://blog.dropbox.com/feed
+    group: company_changelogs
+    priority: 5
+    tags: [collaboration, sharing, workflow]
+
+  - name: GitHub Changelog
+    url: https://github.blog/changelog/feed/
+    group: company_changelogs
+    priority: 7
+    tags: [developer, collaboration, ai, platform]
+
+  - name: Stripe Blog
+    url: https://stripe.com/blog/feed.rss
+    group: company_changelogs
+    priority: 6
+    tags: [billing, monetisation, pricing, platform]
+
+  - name: Semrush Blog
+    url: https://www.semrush.com/blog/feed/
+    group: company_changelogs
+    priority: 6
+    tags: [marketing, seo, ai, monetisation]
+
+  - name: ProductLed
+    url: https://productled.com/blog/rss.xml
+    group: pm_saas
+    priority: 8
+    tags: [plg, activation, onboarding, monetisation]
+
+  - name: Product Coalition
+    url: https://www.productcoalition.com/feed
+    group: pm_saas
+    priority: 7
+    tags: [product, product_management, ai]
+
+  - name: Silicon Valley Product Group
+    url: https://www.svpg.com/feed/
+    group: pm_saas
+    priority: 8
+    tags: [product_management, strategy, leadership]
+
+  - name: Intercom Blog
+    url: https://www.intercom.com/blog/feed/
+    group: pm_saas
+    priority: 7
+    tags: [support, onboarding, activation, ai]
+
+  - name: ChartMogul Blog
+    url: https://chartmogul.com/blog/feed.xml
+    group: pm_saas
+    priority: 7
+    tags: [saas_metrics, monetisation, plg]
+
+  - name: Chargebee Blog
+    url: https://www.chargebee.com/blog/feed/
+    group: pm_saas
+    priority: 7
+    tags: [billing, pricing, monetisation, ai]
+
+  - name: Clouded Judgement
+    url: https://cloudedjudgement.substack.com/feed
+    group: pm_saas
+    priority: 7
+    tags: [saas, markets, monetisation]
 
   - name: RB.RU
     url: https://rb.ru/feeds/all/
     group: industry_ru
     priority: 5
     tags: [russia, startups]
+
+  - name: TechCrunch Startups
+    url: https://techcrunch.com/category/startups/feed/
+    group: industry_us
+    priority: 6
+    tags: [startups, funding, ai, saas]
+
+  - name: TechCrunch Enterprise
+    url: https://techcrunch.com/category/enterprise/feed/
+    group: industry_us
+    priority: 6
+    tags: [enterprise, saas, ai, market]
 
   - name: Product Hunt
     url: https://www.producthunt.com/feed

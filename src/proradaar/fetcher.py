@@ -14,6 +14,9 @@ import httpx
 from proradaar.models import FeedEntry, Source
 
 
+USER_AGENT = "ProRadaar/0.1 RSS digest bot"
+
+
 def fetch_all(
     sources: Iterable[Source],
     timeout_seconds: float = 15.0,
@@ -21,7 +24,11 @@ def fetch_all(
     entries: list[FeedEntry] = []
     failures: list[str] = []
 
-    with httpx.Client(timeout=timeout_seconds, follow_redirects=True) as client:
+    with httpx.Client(
+        timeout=timeout_seconds,
+        follow_redirects=True,
+        headers={"User-Agent": USER_AGENT},
+    ) as client:
         for source in sources:
             try:
                 response = client.get(source.url)

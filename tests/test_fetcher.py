@@ -1,6 +1,7 @@
 import pytest
 
-from proradaar.fetcher import parse_feed
+import proradaar.fetcher as fetcher
+from proradaar.fetcher import fetch_all, parse_feed
 from proradaar.models import Source
 
 
@@ -9,6 +10,46 @@ SOURCE = Source(
     url="https://example.com/feed",
     group="industry_us",
 )
+
+
+def test_fetch_all_sends_user_agent(monkeypatch):
+    client_kwargs = {}
+
+    class FakeResponse:
+        content = b"""
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Product update</title>
+      <link>https://example.com/post</link>
+    </item>
+  </channel>
+</rss>
+"""
+
+        def raise_for_status(self):
+            return None
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            client_kwargs.update(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def get(self, url):
+            return FakeResponse()
+
+    monkeypatch.setattr(fetcher.httpx, "Client", FakeClient)
+
+    entries, failures = fetch_all([SOURCE])
+
+    assert len(entries) == 1
+    assert failures == []
+    assert client_kwargs["headers"]["User-Agent"].startswith("ProRadaar/")
 
 
 def test_parse_feed_extracts_entries():
