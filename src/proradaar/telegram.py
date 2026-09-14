@@ -134,3 +134,24 @@ def send_telegram_message(token: str, chat_id: str, message: str) -> None:
                 },
             )
             response.raise_for_status()
+
+
+def send_telegram_poll(
+    token: str,
+    chat_id: str,
+    question: str,
+    options: list[str],
+) -> None:
+    url = f"https://api.telegram.org/bot{token}/sendPoll"
+
+    with httpx.Client(timeout=15.0) as client:
+        response = client.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "question": question,
+                "options": options,
+                "is_anonymous": True,
+            },
+        )
+        response.raise_for_status()

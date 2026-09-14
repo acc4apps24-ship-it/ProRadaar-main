@@ -1,0 +1,44 @@
+name: Send Telegram Announcement
+
+"on":
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Announcement text. Use \\n for line breaks."
+        required: true
+        type: string
+      send_poll:
+        description: "Send feedback poll after the announcement"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  announcement:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+
+      - name: Test
+        run: pytest -v
+
+      - name: Send announcement
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANNOUNCEMENT_MESSAGE: ${{ inputs.message }}
+          SEND_POLL: ${{ inputs.send_poll }}
+        run: |
+          if [ "$SEND_POLL" = "true" ]; then
+            python -m proradaar.announce --message "$ANNOUNCEMENT_MESSAGE"
+          else
+            python -m proradaar.announce --message "$ANNOUNCEMENT_MESSAGE" --no-poll
+          fi

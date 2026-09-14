@@ -5,6 +5,7 @@ import pytest
 
 from proradaar.telegram import (
     format_telegram_digest_html,
+    send_telegram_poll,
     send_telegram_message,
     split_telegram_message,
 )
@@ -223,3 +224,32 @@ def test_send_telegram_message_does_not_post_empty_message(monkeypatch):
     send_telegram_message("token", "chat", "")
 
     assert requests == []
+
+
+def test_send_telegram_poll_posts_question_and_options(monkeypatch):
+    requests = []
+    real_client = httpx.Client
+
+    def handler(request):
+        requests.append((str(request.url), json.loads(request.content)))
+        return httpx.Response(200, request=request)
+
+    def client_factory(*, timeout):
+        assert timeout == 15.0
+        return real_client(transport=httpx.MockTransport(handler), timeout=timeout)
+
+    monkeypatch.setattr("proradaar.telegram.httpx.Client", client_factory)
+
+    send_telegram_poll("token", "chat", "Как обновление?", ["Супер", "Не одобряю"])
+
+    assert requests == [
+        (
+            "https://api.telegram.org/bottoken/sendPoll",
+            {
+                "chat_id": "chat",
+                "question": "Как обновление?",
+                "options": ["Супер", "Не одобряю"],
+                "is_anonymous": True,
+            },
+        )
+    ]
