@@ -151,6 +151,54 @@ sources:
     priority: 7
     tags: [saas, markets, monetisation]
 
+  - name: PostHog Blog
+    url: https://posthog.com/blog/rss.xml
+    group: pm_saas
+    priority: 8
+    tags: [analytics, experiments, activation, growth]
+
+  - name: Growth Memo
+    url: https://www.growth-memo.com/feed
+    group: pm_saas
+    priority: 8
+    tags: [growth, ai, acquisition, marketing]
+
+  - name: Casey Accidental
+    url: https://caseyaccidental.com/feed/
+    group: pm_saas
+    priority: 7
+    tags: [growth, product, marketplaces, strategy]
+
+  - name: SaaSletter
+    url: https://www.saasletter.com/feed
+    group: pm_saas
+    priority: 7
+    tags: [saas, ai, markets, monetisation]
+
+  - name: Latent Space
+    url: https://www.latent.space/feed
+    group: pm_saas
+    priority: 7
+    tags: [ai, agents, platform, developer]
+
+  - name: Experimentation Labs
+    url: https://newsletter.experimentationlabs.com/feed
+    group: pm_saas
+    priority: 7
+    tags: [experiments, analytics, product, growth]
+
+  - name: Product Growth Blog
+    url: https://www.productgrowth.blog/feed
+    group: pm_saas
+    priority: 7
+    tags: [product, growth, activation, ai]
+
+  - name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+    group: pm_saas
+    priority: 6
+    tags: [ai, platform, developer, market]
+
   - name: RB.RU
     url: https://rb.ru/feeds/all/
     group: industry_ru
