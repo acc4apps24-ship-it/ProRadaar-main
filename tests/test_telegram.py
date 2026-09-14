@@ -87,6 +87,35 @@ def test_format_telegram_digest_html_escapes_special_characters():
     )
 
 
+def test_format_telegram_digest_html_converts_markdown_links():
+    message = "- Read [OpenAI update](https://openai.com/news/?a=1&b=2)"
+
+    assert format_telegram_digest_html(message) == (
+        '• Read <a href="https://openai.com/news/?a=1&amp;b=2">'
+        "OpenAI update</a>"
+    )
+
+
+def test_format_telegram_digest_html_preserves_safe_html_links():
+    message = '- Read <a href="https://cursor.com/changelog">Cursor changelog</a>'
+
+    assert format_telegram_digest_html(message) == (
+        '• Read <a href="https://cursor.com/changelog">Cursor changelog</a>'
+    )
+
+
+def test_format_telegram_digest_html_escapes_unsafe_html_around_links():
+    message = (
+        '- <script>alert(1)</script> '
+        '<a href="https://example.com/?q=1&x=2">A < B</a>'
+    )
+
+    assert format_telegram_digest_html(message) == (
+        '• &lt;script&gt;alert(1)&lt;/script&gt; '
+        '<a href="https://example.com/?q=1&amp;x=2">A &lt; B</a>'
+    )
+
+
 def test_format_telegram_digest_html_normalizes_bullets_and_quotes():
     message = "- One thing\n* Another thing\n> Source failures: A < B"
 

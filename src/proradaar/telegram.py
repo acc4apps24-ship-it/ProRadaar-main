@@ -19,6 +19,11 @@ HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+")
 BULLET_RE = re.compile(r"^\s*(?:[-*•]\s+|\d+[.)]\s+)(.+)$")
 QUOTE_RE = re.compile(r"^\s*>\s?(.*)$")
 STRONG_RE = re.compile(r"(\*\*|__)(.+?)\1")
+LINK_RE = re.compile(
+    r"\[([^\]\n]+)\]\((https?://[^\s)]+)\)"
+    r"|<a\s+href=([\"'])(https?://[^\"']+)\3\s*>(.*?)</a>",
+    re.IGNORECASE,
+)
 
 
 def split_telegram_message(message: str, limit: int = TELEGRAM_LIMIT) -> list[str]:
@@ -82,8 +87,33 @@ def _format_telegram_line(line: str) -> str:
 
 
 def _format_inline_html(value: str) -> str:
-    escaped = html.escape(value, quote=True)
+    escaped = _format_links_and_escape(value)
     return STRONG_RE.sub(r"<b>\2</b>", escaped)
+
+
+def _format_links_and_escape(value: str) -> str:
+    result: list[str] = []
+    position = 0
+
+    for match in LINK_RE.finditer(value):
+        result.append(html.escape(value[position : match.start()], quote=True))
+
+        markdown_label = match.group(1)
+        if markdown_label is not None:
+            result.append(_format_html_link(markdown_label, match.group(2)))
+        else:
+            result.append(_format_html_link(match.group(5), match.group(4)))
+
+        position = match.end()
+
+    result.append(html.escape(value[position:], quote=True))
+    return "".join(result)
+
+
+def _format_html_link(label: str, url: str) -> str:
+    escaped_url = html.escape(url, quote=True)
+    escaped_label = html.escape(label, quote=True)
+    return f'<a href="{escaped_url}">{escaped_label}</a>'
 
 
 def send_telegram_message(token: str, chat_id: str, message: str) -> None:
