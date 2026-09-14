@@ -33,7 +33,14 @@ def fetch_all(
             try:
                 response = client.get(source.url)
                 response.raise_for_status()
-                entries.extend(parse_feed(source, response.content))
+                if source.source_type == "rss":
+                    entries.extend(parse_feed(source, response.content))
+                elif source.source_type == "markdown_release_notes":
+                    entries.extend(
+                        parse_markdown_release_notes(source, response.content)
+                    )
+                else:
+                    raise ValueError(f"Unsupported source type: {source.source_type}")
             except Exception as exc:
                 failures.append(f"{source.name}: {exc}")
 
@@ -51,6 +58,8 @@ def parse_feed(source: Source, content: bytes) -> list[FeedEntry]:
 
         if not title or not url:
             continue
+        if _is_excluded(source, title, summary, url):
+            continue
 
         entries.append(
             FeedEntry(
@@ -67,6 +76,64 @@ def parse_feed(source: Source, content: bytes) -> list[FeedEntry]:
         raise ValueError(f"Failed to parse feed: {reason}")
 
     return entries
+
+
+def parse_markdown_release_notes(source: Source, content: bytes) -> list[FeedEntry]:
+    text = content.decode("utf-8", errors="replace")
+    lines = text.splitlines()
+    entries: list[FeedEntry] = []
+    current_title: str | None = None
+    current_summary: list[str] = []
+    inside_latest_month = False
+
+    for line in lines:
+        if line.startswith("## "):
+            if inside_latest_month:
+                break
+            inside_latest_month = True
+            continue
+
+        if not inside_latest_month:
+            continue
+
+        if line.startswith("### "):
+            _append_markdown_entry(source, entries, current_title, current_summary)
+            current_title = line.removeprefix("### ").strip()
+            current_summary = []
+            continue
+
+        if current_title:
+            stripped = line.strip()
+            if stripped:
+                current_summary.append(stripped)
+
+    _append_markdown_entry(source, entries, current_title, current_summary)
+    return entries
+
+
+def _append_markdown_entry(
+    source: Source,
+    entries: list[FeedEntry],
+    title: str | None,
+    summary_parts: list[str],
+) -> None:
+    if not title:
+        return
+
+    summary = _normalize_markdown_summary(" ".join(summary_parts))
+    url = f"{source.url}#{_markdown_anchor(title)}"
+    if _is_excluded(source, title, summary, url):
+        return
+
+    entries.append(
+        FeedEntry(
+            source=source,
+            title=title,
+            url=url,
+            published_at=None,
+            summary=summary,
+        )
+    )
 
 
 def _published_at(item: Any) -> datetime | None:
@@ -95,6 +162,27 @@ def _normalize_summary(value: Any) -> str:
     stripper.close()
     text = unescape(stripper.text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _normalize_markdown_summary(value: str) -> str:
+    without_links = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", value)
+    without_markup = without_links.replace("`", "").replace("*", "")
+    return re.sub(r"\s+", " ", without_markup).strip()
+
+
+def _is_excluded(source: Source, *values: str) -> bool:
+    text = " ".join(values).lower()
+    return any(
+        keyword.lower() in text
+        for keyword in source.exclude_keywords
+        if keyword.strip()
+    )
+
+
+def _markdown_anchor(title: str) -> str:
+    normalized = re.sub(r"[^\w\s-]", "", title.lower())
+    normalized = re.sub(r"[\s_]+", "-", normalized).strip("-")
+    return normalized
 
 
 class _HTMLTextExtractor(HTMLParser):

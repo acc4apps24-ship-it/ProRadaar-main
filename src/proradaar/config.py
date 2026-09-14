@@ -37,12 +37,28 @@ def _source_from_dict(item: dict[str, Any], index: int) -> Source:
     if not isinstance(tags, list) or not all(isinstance(tag, str) for tag in tags):
         raise ValueError(f"Source #{index + 1} tags must be a list of strings")
 
+    source_type = item.get("type", "rss")
+    if not isinstance(source_type, str) or not source_type.strip():
+        raise ValueError(f"Source #{index + 1} type must be a non-empty string")
+
+    exclude_keywords = item.get("exclude_keywords", [])
+    if exclude_keywords is None:
+        exclude_keywords = []
+    if not isinstance(exclude_keywords, list) or not all(
+        isinstance(keyword, str) for keyword in exclude_keywords
+    ):
+        raise ValueError(
+            f"Source #{index + 1} exclude_keywords must be a list of strings"
+        )
+
     return Source(
         name=name,
         url=url,
         group=group,
         priority=priority,
         tags=tags,
+        source_type=source_type.strip(),
+        exclude_keywords=[keyword.strip() for keyword in exclude_keywords],
     )
 
 

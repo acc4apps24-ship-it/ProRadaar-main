@@ -1,7 +1,7 @@
 import pytest
 
 import proradaar.fetcher as fetcher
-from proradaar.fetcher import fetch_all, parse_feed
+from proradaar.fetcher import fetch_all, parse_feed, parse_markdown_release_notes
 from proradaar.models import Source
 
 
@@ -74,6 +74,69 @@ def test_parse_feed_extracts_entries():
     assert entries[0].url == "https://example.com/onboarding"
     assert entries[0].summary == "Setup improvements for new teams."
     assert entries[0].published_at is not None
+
+
+def test_parse_feed_excludes_entries_matching_source_keywords():
+    source = Source(
+        name="Lenny's Newsletter",
+        url="https://example.com/feed",
+        group="influencers",
+        exclude_keywords=["community wisdom"],
+    )
+    content = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Feed</title>
+    <item>
+      <title>Community Wisdom: onboarding teardown</title>
+      <link>https://example.com/community-wisdom</link>
+      <description>Paid member discussion.</description>
+    </item>
+    <item>
+      <title>New onboarding flow</title>
+      <link>https://example.com/onboarding</link>
+      <description>Setup improvements for new teams.</description>
+    </item>
+  </channel>
+</rss>
+"""
+
+    entries = parse_feed(source, content)
+
+    assert [entry.title for entry in entries] == ["New onboarding flow"]
+
+
+def test_parse_markdown_release_notes_reads_current_month_sections():
+    source = Source(
+        name="xAI Grok Release Notes",
+        url="https://docs.x.ai/developers/release-notes.md",
+        group="company_changelogs",
+    )
+    content = b"""# Release Notes
+
+## September
+
+### Grok Bot
+
+Grok Bot is now available.
+
+### Grok 4.6
+
+Grok 4.6 is now available on the xAI API.
+
+## August
+
+### Imagine image API updates
+
+Older content.
+"""
+
+    entries = parse_markdown_release_notes(source, content)
+
+    assert [entry.title for entry in entries] == ["Grok Bot", "Grok 4.6"]
+    assert entries[0].url == "https://docs.x.ai/developers/release-notes.md#grok-bot"
+    assert entries[0].summary == "Grok Bot is now available."
+    assert entries[0].published_at is None
 
 
 def test_parse_feed_reads_atom_updated_dates():

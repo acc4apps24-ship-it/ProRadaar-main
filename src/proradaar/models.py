@@ -11,6 +11,8 @@ class Source:
     group: str
     priority: int = 0
     tags: list[str] = field(default_factory=list)
+    source_type: str = "rss"
+    exclude_keywords: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

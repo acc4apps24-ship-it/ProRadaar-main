@@ -4,6 +4,7 @@ sources:
     group: influencers
     priority: 10
     tags: [product, growth, activation]
+    exclude_keywords: [community wisdom]
 
   - name: Elena Verna
     url: https://www.elenaverna.com/feed
@@ -23,12 +24,6 @@ sources:
     priority: 8
     tags: [workflow, automation, platform, api]
 
-  - name: Asana Updates
-    url: https://forum.asana.com/c/announcements/product-updates/70.rss
-    group: company_changelogs
-    priority: 7
-    tags: [collaboration, workflow]
-
   - name: Atlassian Blog
     url: https://www.atlassian.com/blog/rss
     group: company_changelogs
@@ -46,12 +41,6 @@ sources:
     group: company_changelogs
     priority: 8
     tags: [collaboration, design, workflow, ai]
-
-  - name: Miro Changelog
-    url: https://miro.com/changelog/feed/
-    group: company_changelogs
-    priority: 6
-    tags: [collaboration, activation]
 
   - name: Linear Changelog
     url: https://linear.app/rss/changelog.xml
@@ -83,17 +72,36 @@ sources:
     priority: 5
     tags: [collaboration, sharing, workflow]
 
-  - name: GitHub Changelog
-    url: https://github.blog/changelog/feed/
-    group: company_changelogs
-    priority: 7
-    tags: [developer, collaboration, ai, platform]
-
   - name: Stripe Blog
     url: https://stripe.com/blog/feed.rss
     group: company_changelogs
     priority: 6
     tags: [billing, monetisation, pricing, platform]
+
+  - name: OpenAI News
+    url: https://openai.com/news/rss.xml
+    group: company_changelogs
+    priority: 8
+    tags: [ai, platform, product, monetisation]
+
+  - name: Claude Platform Release Notes
+    url: https://platform.claude.com/docs/en/release-notes/feed.xml
+    group: company_changelogs
+    priority: 8
+    tags: [anthropic, claude, ai, platform]
+
+  - name: xAI Grok Release Notes
+    url: https://docs.x.ai/developers/release-notes.md
+    type: markdown_release_notes
+    group: company_changelogs
+    priority: 8
+    tags: [grok, xai, ai, platform]
+
+  - name: Cursor Changelog
+    url: https://cursor.com/changelog/rss.xml
+    group: company_changelogs
+    priority: 8
+    tags: [cursor, ai, developer, collaboration]
 
   - name: Semrush Blog
     url: https://www.semrush.com/blog/feed/
