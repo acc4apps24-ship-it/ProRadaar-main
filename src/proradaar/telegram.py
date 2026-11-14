@@ -7,6 +7,13 @@ import httpx
 TELEGRAM_LIMIT = 3900
 SECTION_HEADINGS = frozenset(
     {
+        "Главное",
+        "Авторы и эксперты",
+        "Обновления продуктов",
+        "Рынок России",
+        "Рынок США и мира",
+        "Взгляд продакта",
+        "Наблюдать дальше",
         "Influencers",
         "Company Updates",
         "Industry RU",
